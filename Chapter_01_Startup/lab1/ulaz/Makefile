@@ -8,7 +8,7 @@ LDFLAGS = -O3
 LDLIBS =
 
 OBJEKTI = ulaz.o 
-MODULI = datoteka/datoteka.o generator/generator.o tipkovnica/tipkovnica.o
+MODULI = datoteka/datoteka.o
 
 ZAGLAVLJA=$(OBJEKTI:.o=.d)
 
@@ -21,8 +21,6 @@ $(MODULI):
 
 brisi obrisi:
 	make -C datoteka brisi
-	make -C generator brisi
-	make -C tipkovnica brisi
 	rm -rf *.o *.d
 
 -include $(ZAGLAVLJA)
