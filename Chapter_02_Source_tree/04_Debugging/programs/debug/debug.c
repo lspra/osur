@@ -30,6 +30,8 @@ int debug()
 	c += a + b;
 
 	printf("a=%d, b=%d, c=%d\n", a, b, c);
+	extern char k_startup;
+	printf("Address of 'startup' is %x\n", &k_startup);
 
 #if 1	/* compile with 'debug=yes' and without */
 	LOG(WARN, "This is log entry with WARN relevance");

@@ -20,7 +20,13 @@ SECTIONS {
 		*?/boot/startup.asm.o (.rodata* .data* .bss*)
 		*?/boot/premjesti.o (.rodata* .data* .bss*)
 	}
-	LOAD_ADDR_CODE = BOOT_DATA + SIZEOF(.boot_data);
+	LOAD_ADDR_STARTUP = BOOT_DATA + SIZEOF(.boot_data);
+	STARTUP_ADDR_RAM = 0x150000;
+	.startup STARTUP_ADDR_RAM : AT (LOAD_ADDR_STARTUP) {
+		*?/kernel/startup.o (.text*)
+	}
+	STARTUP_SIZE = SIZEOF(.startup);
+	LOAD_ADDR_CODE = BOOT_DATA + STARTUP_SIZE;
 	.code RAM_LOAD_ADDR : AT (LOAD_ADDR_CODE)
 	{
 		/* instructions */
