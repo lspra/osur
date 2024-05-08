@@ -9,17 +9,22 @@
 #include <kernel/features.h>
 #include <arch/time.h>
 #include <arch/processor.h>
+#include <stdio.h>
 
 void kclock_wake_up(sigval_t sigval);
 void kclock_interrupt_sleep(void *source);
 int ktimer_process_event(sigevent_t *evp);
 static int ktimer_cmp(void *_a, void *_b);
+static void kernel_timer_handler();
 static void ktimer_schedule();
-
+void kernel_timer_set(timespec_t *period);
 /*! List of active timers */
 static list_t ktimers;
 
 static timespec_t threshold;
+static timespec_t clock;	/* system time starting from 0:00 at power on */
+// static timespec_t delay;	/* delay set by kernel, or timer->max_count */
+static timespec_t last_load;/* last time equivalent loaded to counter */
 
 /* timer for sleep + return value */
 static ktimer_t *sleep_timer;
@@ -29,8 +34,8 @@ volatile static int sleep_retval, wake_up;
 /*! Initialize time management subsystem */
 int k_time_init()
 {
-	arch_timer_init();
-
+	clock.tv_sec = clock.tv_nsec = 0;
+	arch_timer_init(kernel_timer_handler);
 	/* timer list is empty */
 	list_init(&ktimers);
 
@@ -56,7 +61,12 @@ int kclock_gettime(clockid_t clockid, timespec_t *time)
 {
 	ASSERT(time && (clockid==CLOCK_REALTIME || clockid==CLOCK_MONOTONIC));
 
-	arch_get_time(time);
+	timespec_t remain;
+	arch_timer_remainder(&remain);
+	
+	*time = last_load;
+	time_sub(time, &remain);
+	time_add(time, &clock);
 
 	return EXIT_SUCCESS;
 }
@@ -70,8 +80,16 @@ int kclock_settime(clockid_t clockid, timespec_t *time)
 {
 	ASSERT(time && (clockid==CLOCK_REALTIME || clockid==CLOCK_MONOTONIC));
 
-	arch_set_time(time);
-
+	arch_get_max_interval(&last_load) ;
+	arch_timer_set(last_load);
+	clock = *time;
+	// /* let kernel handle time shift problems */
+	// if (alarm_handler)
+	// {
+	// 	k_handler = alarm_handler;
+	// 	alarm_handler = NULL; /* reset kernel callback function */
+	// 	k_handler();
+	// }
 	return EXIT_SUCCESS;
 }
 
@@ -128,6 +146,47 @@ void kclock_interrupt_sleep(void *source)
 	sleep_retval = EXIT_FAILURE;
 	set_errno(EINTR);
 	wake_up = TRUE;
+}
+
+/*!
+ * Registered 'kernel' handler for timer interrupts;
+ * update system time and forward interrupt if its timer is expired
+ */
+static void kernel_timer_handler()
+{
+	time_add(&clock, &last_load);
+	ktimer_t *first = list_get(&ktimers, FIRST);
+	if(first != NULL)
+		ktimer_schedule();
+	
+	timespec_t tresh1, tresh2;
+	tresh1.tv_sec = 18;
+	tresh1.tv_nsec = 0;
+	tresh2.tv_sec = 18;
+	tresh2.tv_nsec = 1100000L;
+	if(time_cmp(&tresh1, &clock) < 0 && time_cmp(&tresh2, &clock) > 0) {
+		arch_set_hz(5000);
+		printf("changed frequency!\n");
+	}
+	timespec_t period;
+	arch_get_max_interval(&period);
+	kernel_timer_set(&period);
+}
+
+void kernel_timer_set(timespec_t *period) {
+	last_load = *period;
+	timespec_t remain;
+	arch_timer_remainder(&remain);
+	time_add(&clock, &remain);
+	timespec_t max_time;
+	arch_get_max_interval(&max_time);
+	if(time_cmp(&max_time, period) < 0)
+		last_load = max_time;
+	timespec_t min_time;
+	arch_get_min_interval(&min_time);
+	if(time_cmp(&min_time, period) > 0)
+		last_load = min_time;	
+	arch_timer_set(last_load);
 }
 
 /*! Timers ------------------------------------------------------------------ */
@@ -326,7 +385,7 @@ static void ktimer_schedule()
 			{
 				ref_time = next->itimer.it_value;
 				time_sub(&ref_time, &time);
-				arch_timer_set(&ref_time, ktimer_schedule);
+				kernel_timer_set(&ref_time);
 			}
 			/* evade this behaviour! */
 
@@ -345,7 +404,7 @@ static void ktimer_schedule()
 			{
 				ref_time = first->itimer.it_value;
 				time_sub(&ref_time, &time);
-				arch_timer_set(&ref_time, ktimer_schedule);
+				kernel_timer_set(&ref_time);
 			}
 			break;
 		}
