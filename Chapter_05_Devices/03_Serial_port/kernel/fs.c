@@ -219,9 +219,26 @@ int k_fs_read_write(descriptor_t *desc, void *buffer, size_t size, int op)
 		//char buf[ft->block_size];
 		size_t todo = size;
 		//size_t block = fd->fp / ft->block_size;
-
 		//todo
-
+		int bl_numb = fd->fp / ft->block_size;
+		int pos = fd->fp % ft->block_size;
+		while(todo > 0 && (size-todo) < fd->tfd->size) {
+			int mov = ft->block_size - pos;
+			if(mov > todo)
+				mov = todo;
+			if(mov + (size-todo) > fd->tfd->size)
+				mov = fd->tfd->size - size + todo;
+			char buff[512];
+			char* buffer_ = (char*) buffer;
+			DISK_READ((void*)buff, 1, fd->tfd->block[bl_numb]);
+			for(int i = pos; i < mov + pos; i++) {
+				*(buffer_ + i + (bl_numb * ft->block_size)) = *(buff + i);
+			}
+			pos = 0;
+			bl_numb++;
+			todo-=mov;
+		}
+		//TODO add timestamps
 		return size - todo;
 	}
 	else {
@@ -238,6 +255,35 @@ int k_fs_read_write(descriptor_t *desc, void *buffer, size_t size, int op)
 		//size_t maxfilesize = ft->block_size * MAXFILEBLOCKS;
 
 		//todo
+		if(size > fd->tfd->size)
+			fd->tfd->size = size;
+		int bl_numb = fd->fp / ft->block_size;
+		int pos = fd->fp % ft->block_size;
+		while(todo > 0) {
+			int mov = ft->block_size - pos;
+			if(mov > todo)
+				mov = todo;
+			char buff[512];
+			char* buffer_ = (char*) buffer;
+			if(fd->tfd->block[bl_numb] == 0) {
+				for(int i = 0; i < ft->blocks - 1; i++) {
+					if(ft->free[i]) {
+						ft->free[i] = 0;
+						fd->tfd->block[bl_numb] = i;
+						break;
+					}
+				}
+			}
+			if(pos != 0)
+				DISK_READ((void*)buff, 1, fd->tfd->block[bl_numb]);
+			for(int i = pos; i < mov + pos; i++) {
+				*(buff + i) = *(buffer_ + i + (bl_numb * ft->block_size));
+			}
+			DISK_WRITE((void*) buff, 1, fd->tfd->block[bl_numb])
+			pos = 0;
+			bl_numb++;
+			todo-=mov;
+		}
 
 		return size - todo;
 	}
