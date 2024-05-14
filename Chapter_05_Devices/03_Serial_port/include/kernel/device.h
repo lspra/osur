@@ -6,6 +6,7 @@
 /*! interface to programs */
 int sys__open(char *pathname, int flags, mode_t mode, descriptor_t *desc);
 int sys__close(descriptor_t *desc);
+int sys__truncate(descriptor_t *desc, size_t new_size);
 int sys__read(descriptor_t *desc, void *buffer, size_t count);
 int sys__write(descriptor_t *desc, void *buffer, size_t count);
 int sys__device_status(descriptor_t *desc, int flags);

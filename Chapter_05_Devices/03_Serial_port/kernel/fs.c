@@ -239,6 +239,11 @@ int k_fs_read_write(descriptor_t *desc, void *buffer, size_t size, int op)
 			todo-=mov;
 		}
 		//TODO add timestamps
+		timespec_t t;
+		kclock_gettime (CLOCK_REALTIME, &t);
+		fd->tfd->ta = t;
+		char* buffer_ = (char*) buffer;
+		buffer_[size-todo] = '\0';
 		return size - todo;
 	}
 	else {
@@ -284,9 +289,31 @@ int k_fs_read_write(descriptor_t *desc, void *buffer, size_t size, int op)
 			bl_numb++;
 			todo-=mov;
 		}
-
+		timespec_t t;
+		kclock_gettime (CLOCK_REALTIME, &t);
+		fd->tfd->ta = fd->tfd->tm = t;
 		return size - todo;
 	}
 
 	return 0;
+}
+
+//returns the number of bytes that were freed
+int k_fs_truncate(descriptor_t *fd, size_t new_size) {
+	struct kfile_desc *filed = last_check;
+
+	int num_blocks = new_size / ft->block_size;
+	int freed = filed->tfd->size - new_size;
+	if(new_size % ft->block_size)
+		num_blocks++;
+	for(int i = num_blocks; i < filed->tfd->blocks; i++) {
+		ft->free[filed->tfd->block[i]] = 1;
+	}
+	filed->tfd->blocks = num_blocks;
+	filed->tfd->size = new_size;
+	
+	timespec_t t;
+	kclock_gettime (CLOCK_REALTIME, &t);
+	filed->tfd->ta = filed->tfd->tm = t;
+	return freed;
 }

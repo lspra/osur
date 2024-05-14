@@ -107,6 +107,18 @@ ssize_t write(int fd, void *buffer, size_t count)
 	return sys__write(&std_desc[fd], buffer, count);
 }
 
+ssize_t truncate(int fd, size_t new_size)
+{
+	if (	fd < 0 || fd >= MAX_USER_DESCRIPTORS ||
+		!std_desc[fd].id || !std_desc[fd].ptr || new_size < 0)
+	{
+		set_errno(EBADF);
+		return EXIT_FAILURE;
+	}
+
+	return sys__truncate(&std_desc[fd], new_size);
+}
+
 /*! Get input from "standard input" */
 int getchar()
 {

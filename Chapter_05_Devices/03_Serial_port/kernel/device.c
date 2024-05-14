@@ -326,6 +326,41 @@ int sys__write(descriptor_t *desc, void *buffer, size_t size)
 	return read_write(desc, buffer, size, FALSE);
 }
 
+int sys__truncate(descriptor_t *desc, size_t new_size) {
+	kdevice_t *kdev;
+	kobject_t *kobj;
+	int retval;
+
+	SYS_ENTRY();
+
+	ASSERT_ERRNO_AND_EXIT(desc && new_size > 0, EINVAL);
+
+	if (k_fs_is_file_open(desc) == 0) {
+		int retval = k_fs_truncate(desc, new_size);
+		if (retval > 0)
+			SYS_EXIT(EXIT_SUCCESS, retval);
+		else
+			SYS_EXIT(EXIT_FAILURE, retval);
+	}
+	//else
+
+	kobj = desc->ptr;
+	ASSERT_ERRNO_AND_EXIT(kobj, EINVAL);
+	ASSERT_ERRNO_AND_EXIT(list_find(&kobjects, &kobj->list),
+				EINVAL);
+	kdev = kobj->kobject;
+	ASSERT_ERRNO_AND_EXIT(kdev && kdev->id == desc->id, EINVAL);
+
+	/* TODO check permission for requested operation from opening flags */
+
+	retval = k_fs_truncate(desc, new_size);
+
+	if (retval >= 0)
+		SYS_EXIT(EXIT_SUCCESS, retval);
+	else
+		SYS_EXIT(-retval, EXIT_FAILURE);
+}
+
 static int read_write(descriptor_t *desc, void *buffer, size_t size, int op)
 {
 	kdevice_t *kdev;

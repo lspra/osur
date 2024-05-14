@@ -72,7 +72,11 @@ void k_startup()
 	retval = read(fd, buff, 11);
 	kprintf("retval=%d\n", retval);
 	kprintf("buff=%s\n", buff);
-
+	retval = truncate(fd, 5);
+	kprintf("retval=%d\n", retval);
+	retval = read(fd, buff, 5);
+	kprintf("retval=%d\n", retval);
+	kprintf("buff=%s\n", buff);
 
 	/* start desired program(s) */
 	//hello_world();
