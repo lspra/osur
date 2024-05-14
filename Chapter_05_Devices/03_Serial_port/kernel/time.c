@@ -405,6 +405,14 @@ static void ktimer_schedule()
 				ref_time = first->itimer.it_value;
 				time_sub(&ref_time, &time);
 				kernel_timer_set(&ref_time);
+				timespec_t compare;
+				compare.tv_sec = 0;
+				compare.tv_nsec = 950000;
+				if(time_cmp(&ref_time, &compare) < 0) {
+					arch_set_hz(10000);
+				} else {
+					arch_set_hz(1000);
+				}
 			}
 			break;
 		}
