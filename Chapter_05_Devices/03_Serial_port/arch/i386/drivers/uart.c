@@ -58,8 +58,8 @@ static int uart_init(uint flags, void *params, device_t *dev)
 	/* check chip */
 	identify_UART(up);
 
-	if (up->uart_type)
-		return 0; /* already initialized */
+	//if (up->uart_type)
+	//	return 0; /* already initialized */
 
 	return uart_config(dev, &up->params);
 }
@@ -161,7 +161,7 @@ static int uart_interrupt_handler(int irq_num, void *device)
 	{
 		iir = inb(up->port + IIR);
 
-		if (!(iir & IIR_INT_PENDING))
+		if ((iir & IIR_INT_PENDING) == 1)
 			return 0; /* no interrupt pending from this device */
 
 		if (iir & IIR_TIMEOUT)
@@ -258,11 +258,13 @@ static int uart_send(void *data, size_t size, uint flags, device_t *dev)
 /*! Read data from UART to software buffer */
 static void uart_read(arch_uart_t *up)
 {
+	extern int irq_prio;
 	/* While UART is not empty and software buffer is not full */
 	while ((inb(up->port + LSR) & LSR_DATA_READY)
 		&& up->insz < up->inbufsz)
 	{
 		up->inbuff[up->inl] = inb(up->port + RBR);
+		irq_prio = up->inbuff[up->inl] - '0';
 		INC_MOD(up->inl, up->inbufsz);
 		up->insz++;
 	}
