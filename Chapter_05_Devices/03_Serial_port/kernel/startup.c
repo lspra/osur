@@ -56,6 +56,8 @@ void k_startup()
 	stdio_init(); /* initialize standard input & output devices */
 
 	/* start desired program(s) */
+	kprintf("here\n");
+	interrupts();
 	hello_world();
 	keyboard();
 	timer();

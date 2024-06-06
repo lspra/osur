@@ -15,8 +15,9 @@ int keyboard()
 	do {
 		if ((key = getchar()))
 			printf("Got: %c(%d)\n", key, key);
-		else
+		else {
 			nanosleep(&t, NULL);
+		}
 	}
 	while (key != '.');
 
