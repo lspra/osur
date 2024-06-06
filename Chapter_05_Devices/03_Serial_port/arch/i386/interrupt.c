@@ -37,6 +37,8 @@ struct ir_request
 	list_h list;
 };
 
+static struct ir_request *curr = NULL, *past = NULL, *past2 = NULL;
+
 int cmp_requent(void* ir1, void* ir2) {
 	struct ir_request *i1, *i2;
 	if(ir1 == ir2)
@@ -147,18 +149,38 @@ void arch_interrupt_handler(int irq_num)
 
 	while(ih && !ih->processing && (depth < 3 || ih->priority > PRIO_SIM_MAX))
 	{
-		depth++;
 		/* enable interrupts on PIC immediately since program may not
 		 * return here immediately */
-
+		if(curr != NULL && curr->priority >= ih->priority)
+			break;
+		if(past != NULL && past->priority >= ih->priority) {
+			curr = past;
+			past = NULL;
+			break;
+		}
+		if(past2 != NULL && past2->priority >= ih->priority) {
+			curr = past;
+			past = past2;
+			past2 = NULL;
+			break;
+		}
+		if(ih->priority != 20) {
+			past2 = past;
+			past = curr;
+			curr = ih;
+			depth++;
+		}
 		list_remove(&requests, 0, &ih->list);
 		ih->processing = TRUE;
 		enable_interrupts();
 		if (icdev->at_exit)
 			icdev->at_exit(irq_num);
-		ih->handler->ihandler(irq_num, ih->handler->device);
+		ih->handler->ihandler(ih->priority == 20 ? irq_num : IRQ_NUM_SIM0 + ih->priority, ih->handler->device);
 		disable_interrupts();
-		depth--;
+		if(ih->priority != 20) {
+			curr = NULL;
+			depth--;
+		}
 		if(irq_prio > 0) {
 			dodaj_zahtjeve(IRQ_NUM_SIM0 + irq_prio);
 			irq_prio = 0;
