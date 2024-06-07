@@ -1,0 +1,64 @@
+Starting qemu
+Benu: Chapter_05_Devices:03_Serial_port, Version: 1.0 (i386)
+here
+Example program: [programs/interrupts/interrupts.c:interrupts]
+interrupts_PROG_HELP
+
+Example program: [programs/hello_world/hello_world.c:hello_world]
+Print 'Hello world'.
+
+Hello World!
+Example program: [programs/keyboard/keyboard.c:keyboard]
+Print ASCII code for each keystroke. Press '.' to end.
+
+Pocetak obrade prekida prioriteta 2
+Obrada prioriteta 2 1/10
+Obrada prioriteta 2 2/10
+Obrada prioriteta 2 3/10
+Priority: 3, Depth: 1, Interrupted priority: 2
+Pocetak obrade prekida prioriteta 3
+Obrada prioriteta 3 1/10
+Obrada prioriteta 3 2/10
+Priority: 4, Depth: 2, Interrupted priority: 3
+Pocetak obrade prekida prioriteta 4
+Obrada prioriteta 4 1/10
+Obrada prioriteta 4 2/10
+Priority: 5, Depth: 3, Current priority: 4 not interrupted
+Obrada prioriteta 4 3/10
+Obrada prioriteta 4 4/10
+Obrada prioriteta 4 5/10
+Obrada prioriteta 4 6/10
+Obrada prioriteta 4 7/10
+Obrada prioriteta 4 8/10
+Obrada prioriteta 4 9/10
+Obrada prioriteta 4 10/10
+Kraj obrade prekida prioriteta 4
+Pocetak obrade prekida prioriteta 5
+Obrada prioriteta 5 1/10
+Obrada prioriteta 5 2/10
+Obrada prioriteta 5 3/10
+Obrada prioriteta 5 4/10
+Obrada prioriteta 5 5/10
+Obrada prioriteta 5 6/10
+Obrada prioriteta 5 7/10
+Obrada prioriteta 5 8/10
+Obrada prioriteta 5 9/10
+Obrada prioriteta 5 10/10
+Kraj obrade prekida prioriteta 5
+Obrada prioriteta 3 3/10
+Obrada prioriteta 3 4/10
+Obrada prioriteta 3 5/10
+Obrada prioriteta 3 6/10
+Obrada prioriteta 3 7/10
+Obrada prioriteta 3 8/10
+Obrada prioriteta 3 9/10
+Obrada prioriteta 3 10/10
+Kraj obrade prekida prioriteta 3
+Obrada prioriteta 2 4/10
+Obrada prioriteta 2 5/10
+Obrada prioriteta 2 6/10
+Obrada prioriteta 2 7/10
+Obrada prioriteta 2 8/10
+Obrada prioriteta 2 9/10
+Obrada prioriteta 2 10/10
+Kraj obrade prekida prioriteta 2

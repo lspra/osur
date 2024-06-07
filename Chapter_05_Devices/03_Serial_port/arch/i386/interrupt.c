@@ -151,6 +151,8 @@ void arch_interrupt_handler(int irq_num)
 	{
 		/* enable interrupts on PIC immediately since program may not
 		 * return here immediately */
+		if(ih && curr && ih->priority != 20)
+			kprintf("Priority: %d, Depth: %d, Interrupted priority: %d\n", ih->priority, depth, curr->priority);
 		if(curr != NULL && curr->priority >= ih->priority)
 			break;
 		if(past != NULL && past->priority >= ih->priority) {
@@ -183,6 +185,8 @@ void arch_interrupt_handler(int irq_num)
 		}
 		if(irq_prio > 0) {
 			dodaj_zahtjeve(IRQ_NUM_SIM0 + irq_prio);
+			if(depth == 3)
+				kprintf("Priority: %d, Depth: %d, Current priority: %d not interrupted\n", irq_prio, depth, curr->priority);
 			irq_prio = 0;
 		}
 		ih = list_get(&requests, FIRST);
